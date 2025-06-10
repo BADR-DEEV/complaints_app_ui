@@ -1,6 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:app_links/app_links.dart';
+import 'package:complaintsapp/AppClient/Models/User/UserResponseDto.dart';
 import 'package:complaintsapp/AppClient/Services/_shared_prefs_helper.dart';
 import 'package:complaintsapp/Ui/shared/constants/colors&fonts.dart';
 import 'package:complaintsapp/Ui/shared/dialog_manager.dart';
@@ -11,67 +14,174 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ConfirmEmailScreen extends StatefulWidget {
-  const ConfirmEmailScreen({super.key, String? email, String? token});
+  final String? password;
+  final String? passed_email;
+  ConfirmEmailScreen({super.key, String? token, this.password, this.passed_email});
 
   @override
   State<ConfirmEmailScreen> createState() => _ConfirmEmailscreenState();
 }
 
-class _ConfirmEmailscreenState extends State<ConfirmEmailScreen> {
+class _ConfirmEmailscreenState extends State<ConfirmEmailScreen> with WidgetsBindingObserver {
+  StreamSubscription<Uri>? _uriLinkSubscription;
+  Uri? _lastProcessedUri; // To prevent processing the same URI multiple times
+  bool _isInit = false;
+  String real_passed_email = '';
+
+  @override
   void initState() {
     super.initState();
+    _lastProcessedUri = Uri();
+
+    WidgetsBinding.instance.addObserver(this);
     _handleIncomingLinks();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    // Crucially, cancel the subscription when the widget is disposed
+    _lastProcessedUri = null;
+    _uriLinkSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Only run this logic once after the first build or whenever dependencies change
+    // This is the correct place to access InheritedWidgets like GoRouterState.of(context)
+    if (!_isInit) {
+      final extraData = GoRouterState.of(context).extra;
+      Map<String, dynamic>? extras;
+
+      if (extraData != null && extraData is Map<String, dynamic>) {
+        extras = extraData;
+      }
+
+      // Safely assign text to controllers based on extra data
+      real_passed_email = extras != null && extras['email'] != null ? extras['email'] : "";
+
+      _isInit = true; // Set flag to true so this block doesn't run again
+    }
   }
 
   void _handleIncomingLinks() async {
     final appLinks = AppLinks();
 
     // Handle initial link if app was opened via deep link
-    final Uri? initialLinkString = await appLinks.getInitialLink();
-    if (initialLinkString != null) {
-      final Uri initialUri = initialLinkString;
-      initDeepLink(initialUri);
+    try {
+      final Uri? initialLinkString = await appLinks.getInitialLink();
+
+      if (initialLinkString != null) {
+        print(initialLinkString);
+        print(_lastProcessedUri);
+
+        // Process initial link only if it hasn't been processed
+        if (_lastProcessedUri != initialLinkString) {
+          _lastProcessedUri = initialLinkString;
+          initDeepLink(initialLinkString);
+        }
+      }
+    } catch (e) {
+      print("Error getting initial link: $e");
     }
 
     // Listen to link changes (if app already opened)
-    appLinks.uriLinkStream.listen((Uri uri) {
-      initDeepLink(uri);
+    _uriLinkSubscription = appLinks.uriLinkStream.listen((Uri uri) {
+      // Process only if it's a new URI or different from the last one processed
+      if (_lastProcessedUri != uri) {
+        _lastProcessedUri = uri;
+        initDeepLink(uri);
+      }
+    }, onError: (err) {
+      print('Got error: $err');
     });
   }
 
   Future<void> initDeepLink(Uri uri) async {
     try {
+      final uriString = uri.toString();
+
+      // Prevent re-handling the same link
+      if (SharedPrefs().lastUri == uriString) {
+        print("This link has already been handled. Skipping.");
+        return;
+      }
+
+      SharedPrefs().lastUri = uriString;
       print("Received deep link: $uri");
 
       if (uri.scheme == 'complaintsapp' && uri.host == 'confirm-email') {
         final email = uri.queryParameters['email'];
-        final jwt = uri.queryParameters['jwt']; // <-- Get actual login token
+        final responseParam = uri.queryParameters['response'];
+        final receivedToken = uri.queryParameters['token'];
 
-        if (email != null && jwt != null) {
-          print("Email confirmed. Logging in user: $email");
+        final savedEmail = real_passed_email?.trim().toLowerCase();
+        final receivedEmail = email?.trim().toLowerCase();
+        final savedUrl = SharedPrefs().emailToken;
+
+        print("Response: $responseParam");
+        print("Saved email: $savedEmail");
+        print("Received email: $receivedEmail");
+        print("Received token: $receivedToken");
+        print("Saved token: $savedUrl");
+
+        // Extract the token from the saved URL
+        final savedUri = Uri.tryParse(savedUrl ?? '');
+        final savedToken = savedUri?.queryParameters['token'];
+
+        print("Extracted saved token: $savedToken");
+
+        if (responseParam == "200" && receivedEmail == savedEmail && receivedToken == savedToken) {
           SharedPrefs().userEmail = email;
-          SharedPrefs().token = jwt;
 
-          // Optional: Verify token validity with backend before redirecting
-
-          GoRouter.of(context).go('/home');
-        } else {
-          // JWT is missing — show success message but ask to log in manually
+          print("Going to login screen...");
           DialogManager.customDialog(
+            isDismissible: false,
             context,
-            'Email Verified',
+            AppLocalizations.of(context)!.yourAccount,
             dialogType: DialogType.success,
-            buttonTitle: 'Login',
-            onPressed: () => GoRouter.of(context).go('/login'),
-            childWidget: Text(
-              'Your email ($email) was successfully verified.\nPlease log in to continue.',
-              textAlign: TextAlign.center,
-            ),
+            buttonTitle: AppLocalizations.of(context)!.ok,
+            onPressed: () {
+              GoRouter.of(context).go(
+                '/',
+                extra: {
+                  'email': email,
+                  'password': widget.password,
+                },
+              );
+            },
           );
+        } else {
+          print("Email/token mismatch or invalid response.");
+          // DialogManager.customDialog(
+          //   context,
+          //   'Email Not Verified',
+          //   dialogType: DialogType.error,
+          //   buttonTitle: 'Ok',
+          //   onPressed: () {
+          //     Navigator.of(context).pop();
+          //   },
+          //   childWidget: const Text(
+          //     '',
+          //     textAlign: TextAlign.center,
+          //   ),
+          // );
         }
       }
     } catch (e) {
+      SharedPrefs().isLoggedIn = false; // Ensure this is only set if logic warrants it
       print("Error handling deep link: $e");
+      // Consider showing an error dialog to the user here
+      DialogManager.customDialog(
+        context,
+        "Something went wrong", // Generic error
+        dialogType: DialogType.error,
+        buttonTitle: AppLocalizations.of(context)!.ok,
+        onPressed: () => Navigator.of(context).pop(),
+      );
     }
   }
 
@@ -122,7 +232,7 @@ class _ConfirmEmailscreenState extends State<ConfirmEmailScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          AppLocalizations.of(context)!.weSentEmail,
+                          (AppLocalizations.of(context)!.weSentEmail + (real_passed_email != null ? real_passed_email.toString() : "")),
                           textAlign: TextAlign.center,
                           style: GoogleFonts.cairo(
                             fontSize: 16,

@@ -27,6 +27,18 @@
         "emailVerification": "تم إرسال التحقق من البريد الإلكتروني",
         "weSentEmail": "لقد أرسلنا رسالة تحقق إلى:",
         "pleaseCheck": "يرجى التحقق من صندوق الوارد أو مجلد الرسائل غير المرغوب فيها لتأكيد بريدك الإلكتروني.",
-        "backToLogin": "العودة لتسجيل الدخول"
-       
+        "yourAccount": "تم تأكيد حسابك، يرجى تسجيل الدخول",
+        "backToLogin": "العودة لتسجيل الدخول",
+        "titleComplaint": "عنوان",
+        "description": "الوصف",
+        "submit": "إرسال",
+        "tapToUpload": "اضغط لتحميل المرفق",
+        "submitAcomplaint": "تقديم شكوى",
+        "myComplaints": "شكاواي",
+        "subComp": "إضافة شكوى",
+        "logout": "تسجيل الخروج",
+        "sureLogout": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+        "yourComplaintSubmited": "تم تقديم الشكوي بنجاح",
+        "category" : "الصنف"
+
 }

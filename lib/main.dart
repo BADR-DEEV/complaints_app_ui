@@ -114,7 +114,7 @@ class _MyAppState extends State<MyApp> {
 }
 
 final GoRouter _router = GoRouter(
-  initialLocation: "/confirm-email",
+  redirect: authRedirect,
   routes: <RouteBase>[
     GoRoute(
       path: '/',
@@ -133,7 +133,7 @@ final GoRouter _router = GoRouter(
           builder: (context, state) {
             final email = state.uri.queryParameters['email'];
             final token = state.uri.queryParameters['token'];
-            return ConfirmEmailScreen(email: email, token: token);
+            return ConfirmEmailScreen(passed_email  : email, token: token);
           },
         ),
       ],
@@ -166,4 +166,24 @@ CustomTransitionPage _buildTransitionPage(Widget child, String animationType) {
       return child; // Default case, no transition
     },
   );
+}
+
+String? authRedirect(BuildContext context, GoRouterState state) {
+  final isLoggedIn = SharedPrefs().isLoggedIn;
+  final token = SharedPrefs().token;
+
+  final isAuth = isLoggedIn && token != null && token.isNotEmpty;
+
+  final goingToLogin = state.uri.toString() == '/' || state.uri.toString() == '/register' || state.uri.toString() == '/confirm-email';
+  if (!isAuth && !goingToLogin) {
+    // Not logged in, trying to access protected route
+    return '/';
+  }
+
+  if (isAuth && goingToLogin) {
+    // Already logged in, redirect from login to home
+    return '/home';
+  }
+
+  return null; // no redirection
 }

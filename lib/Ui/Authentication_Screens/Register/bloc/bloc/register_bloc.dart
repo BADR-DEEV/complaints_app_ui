@@ -34,9 +34,9 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
           onSuccess: () async {
             var data = RegisterResponse.fromJson(json.decode(response.body));
             emit(RegisterSuccess(registerResponse: data));
-    
           },
           onFailure: (message) {
+            SharedPrefs().isLoggedIn = false;
             print("Registration failed: $message");
             emit(RegisterFailure(error: message, RegisterResponse.fromJson(json.decode(response.body))));
           });
@@ -44,6 +44,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       handleException(
           e: e,
           onFailure: (message) {
+            SharedPrefs().isLoggedIn = false;
             emit(RegisterFailure(error: message, null));
           });
     }

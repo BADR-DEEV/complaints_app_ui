@@ -6,7 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 
 class UrlApi {
-  static String urlApiPor = 'http://192.168.1.2:5189/';
+  static String urlApiPor = 'http://192.168.1.12:5189/';
+  static String staticUrl = 'http://localhost:5189/';
 }
 
 Future<void> handleApiResponse({

@@ -42,6 +42,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
             SharedPrefs().userName = data.data?.displayName ?? '';
           },
           onFailure: (message) {
+            SharedPrefs().isLoggedIn = false;
+
             print("Login failed: $message");
             emit(LoginFailure(error: message, LoginResponse.fromJson(json.decode(response.body))));
           });
@@ -49,6 +51,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       handleException(
           e: e,
           onFailure: (message) {
+            SharedPrefs().isLoggedIn = false;
+
             emit(LoginFailure(error: message, null));
           });
     }

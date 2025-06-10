@@ -28,7 +28,15 @@ class SharedPrefs {
 
   //set token
   String? get userEmail => _sharedPrefs.getString("userEmail") ?? "";
+  
   set userEmail(String? value) {
+    _sharedPrefs.setString("userEmail", value ?? '');
+  }
+
+
+ String? get emailToken => _sharedPrefs.getString("userEmail") ?? "";
+  
+  set emailToken(String? value) {
     _sharedPrefs.setString("userEmail", value ?? '');
   }
 
@@ -39,9 +47,17 @@ class SharedPrefs {
 
   //------------------language--------------------
   String get language => _sharedPrefs.getString("language") ?? "ar";
+
   set language(String value) {
     _sharedPrefs.setString("language", value);
   }
+
+    String get lastUri => _sharedPrefs.getString("language") ?? "ar";
+
+  set lastUri(String value) {
+    _sharedPrefs.setString("lastUri", value);
+  }
+
 
   String get userName => _sharedPrefs.getString("userName") ?? "";
   set userName(String value) {

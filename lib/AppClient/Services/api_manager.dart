@@ -26,11 +26,13 @@ class ApiManager {
     Object? body,
     Map<String, String>? headers,
   }) async {
-    final response = await http.post(
-      Uri.parse(url),
-      headers: _getAuthHeaders(headers),
-      body: body,
-    );
+    final response = await http
+        .post(
+          Uri.parse(url),
+          headers: _getAuthHeaders(headers),
+          body: body,
+        )
+        .timeout(Duration(minutes: 1));
     return response;
   }
 

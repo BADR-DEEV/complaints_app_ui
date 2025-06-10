@@ -24,9 +24,21 @@
         "pleaseWait": "Please wait...",
         "tapFormoreDetails": "Tap for more details",
         "unTapToClose": "Tap to close",
-         "emailVerification": "Email Verification Sent",
+        "emailVerification": "Email Verification Sent",
         "weSentEmail": "we sent an email Verification to:",
+        "yourAccount": "Your account has been confirmed please login",
         "pleaseCheck": "please check your inbox or spam folder to verify your email.",
-        "backToLogin": "Back to Login"
-      
+        "backToLogin": "Back to Login",
+        "titleComplaint": "Title",
+        "description": "Description",
+        "submit": "Submit",
+        "tapToUpload": "Tap to Upload attachment",
+        "submitAcomplaint": "Submit a Complaints",
+        "myComplaints": "My Complaints",
+        "subComp": "Add Complaint",
+        "logout": "Logout",
+        "sureLogout": "Are you sure you want to logout?",
+        "yourComplaintSubmited" : "Your Complaint has been submitted",
+        "category" : "Category"
+
 }

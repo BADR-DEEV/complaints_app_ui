@@ -57,8 +57,13 @@ class _RegisterPageState extends State<RegisterPage> {
                         dialogType: DialogType.success,
                         buttonTitle: AppLocalizations.of(context)!.ok,
                         onPressed: () {
+                          SharedPrefs().emailToken = state.registerResponse.message;
                           GoRouter.of(context).go(
                             '/confirm-email',
+                            extra: {
+                              'email': _emailController.text,
+                              'password': _passwordController.text, // Provide password if available
+                            },
                           );
                         },
                       );

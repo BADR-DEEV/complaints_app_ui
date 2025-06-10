@@ -27,7 +27,44 @@ class _LoginScreenState extends State<LoginPage> {
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isInit = false;
   String locale = SharedPrefs().language == 'ar' ? 'ar' : 'en';
+  @override
+  void initState() {
+    super.initState();
+
+    _emailController.text = "";
+    _passwordController.text = "";
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Only run this logic once after the first build or whenever dependencies change
+    // This is the correct place to access InheritedWidgets like GoRouterState.of(context)
+    if (!_isInit) {
+      final extraData = GoRouterState.of(context).extra;
+      Map<String, dynamic>? extras;
+
+      if (extraData != null && extraData is Map<String, dynamic>) {
+        extras = extraData;
+      }
+
+      // Safely assign text to controllers based on extra data
+      _emailController.text = extras != null && extras['email'] != null ? extras['email'] : "";
+      _passwordController.text = extras != null && extras['password'] != null ? extras['password'] : "";
+
+      _isInit = true; // Set flag to true so this block doesn't run again
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +76,6 @@ class _LoginScreenState extends State<LoginPage> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                  
                 Color(0xFF1E3C72), // Your primary color
                 Color(0xFF2A5298), // A matching rich blue
                 Color(0xFF4A90E2), // Softer blue highlight
